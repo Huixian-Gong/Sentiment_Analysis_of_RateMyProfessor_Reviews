@@ -1,0 +1,53 @@
+import pandas as pd
+import re
+
+# Load the CSV file
+file_path = '/Users/willchow/PycharmProjects/FetchRateMyProfessor/professor_comments.csv'
+df = pd.read_csv(file_path)
+
+# Ensure 'Comment' column exists
+if 'Comment' in df.columns:
+    comments = df['Comment']
+
+    # Define a lighter list of stopwords
+    stop_words = {
+        'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves',
+        'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them',
+        'their', 'theirs', 'themselves', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+        'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until',
+        'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before',
+        'after', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'then', 'once',
+        'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most',
+        'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't',
+        'can', 'will', 'just', 'don', 'should', 'now'
+    }
+
+    # Define preprocessing functions
+    def preprocess_comment(comment):
+        if not isinstance(comment, str):
+            comment = ''  # Convert non-string values to empty string
+        # Keep important punctuation for readability (e.g., periods and commas)
+        comment = re.sub(r'[^\w\s.,!?]', '', comment)
+        # Convert to lowercase
+        comment = comment.lower()
+        # Remove excessive whitespace
+        comment = re.sub(r'\s+', ' ', comment).strip()
+        # Selectively remove stopwords to keep some structure
+        comment = ' '.join([word for word in comment.split() if word.lower() not in stop_words])
+        return comment
+
+    # Apply preprocessing to all comments
+    df['Comment'] = comments.apply(preprocess_comment)
+
+    # Filter out rows where 'noTag' column equals 1
+    if 'noTag' in df.columns:
+        df = df[df['noTag'] != 1]
+
+    # Save the processed DataFrame to a new CSV file
+    output_file_path = '/Users/willchow/PycharmProjects/FetchRateMyProfessor/preprocessed_comments.csv'
+    df.to_csv(output_file_path, index=False)
+
+    print(f"Preprocessed comments with improved natural flow have been saved to {output_file_path}")
+
+else:
+    print("The CSV file does not contain a 'Comment' column.")
